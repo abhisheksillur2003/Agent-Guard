@@ -2,6 +2,7 @@ import httpx
 from pytest import MonkeyPatch
 
 from backend.app.api.routes import health as health_routes
+from backend.app.core.config import get_settings
 from backend.app.db.session import DatabaseUnavailableError
 from backend.app.main import app
 
@@ -15,7 +16,7 @@ async def test_healthz_reports_process_health() -> None:
     assert response.json() == {
         "status": "ok",
         "service": "agentguard-api",
-        "environment": "local",
+        "environment": get_settings().environment,
     }
     assert response.headers["x-request-id"]
 
