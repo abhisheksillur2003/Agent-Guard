@@ -58,6 +58,24 @@ export interface Tool {
   updated_at: string;
 }
 
+export interface AgentCredential {
+  credential: string;
+  key_prefix: string;
+  expires_at: string | null;
+  warning: string;
+}
+
+export interface AgentPermission {
+  id: string;
+  agent_id: string;
+  tool_id: string;
+  operations: string[];
+  constraints_json: Record<string, unknown>;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Policy {
   id: string;
   organization_id: string;

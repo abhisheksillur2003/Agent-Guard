@@ -1,4 +1,5 @@
-import { demoResponse } from "@/lib/demo-data";
+import { demoResponse, demoUser } from "@/lib/demo-data";
+import type { CurrentUser } from "@/lib/types";
 
 export const demoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
@@ -51,3 +52,15 @@ export const apiPost = <T>(path: string, body: unknown) =>
   request<T>(path, { method: "POST", body: JSON.stringify(body) });
 export const apiPatch = <T>(path: string, body: unknown) =>
   request<T>(path, { method: "PATCH", body: JSON.stringify(body) });
+export const apiPut = <T>(path: string, body: unknown) =>
+  request<T>(path, { method: "PUT", body: JSON.stringify(body) });
+export const apiDelete = <T>(path: string) =>
+  request<T>(path, { method: "DELETE" });
+
+export async function getCurrentUser(): Promise<CurrentUser> {
+  if (demoMode) return demoUser;
+  const response = await fetch("/api/auth/session", { cache: "no-store" });
+  if (!response.ok) throw new Error("Your session has expired");
+  const data = (await response.json()) as { user: CurrentUser };
+  return data.user;
+}

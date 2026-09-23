@@ -2,7 +2,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import {
-  Bot,
   CheckCircle2,
   Database,
   Gauge,
@@ -10,7 +9,6 @@ import {
   Server,
   ShieldCheck,
   TimerReset,
-  Wrench,
 } from "lucide-react";
 
 import {
@@ -24,13 +22,11 @@ import {
 import { apiGet, demoMode } from "@/lib/api-client";
 import { formatDate, shortId, titleCase } from "@/lib/format";
 import type {
-  Agent,
   AuditEvent,
   Execution,
   Policy,
   SecurityDetector,
   SecurityFinding,
-  Tool,
 } from "@/lib/types";
 
 function QueryBoundary<T>({
@@ -51,156 +47,6 @@ function QueryBoundary<T>({
   if (!data?.length)
     return <EmptyState title="No records yet" message={empty} />;
   return children(data);
-}
-
-export function AgentsView() {
-  const query = useQuery({
-    queryKey: ["agents"],
-    queryFn: () => apiGet<Agent[]>("/agents"),
-  });
-  return (
-    <>
-      <PageHeader
-        eyebrow="Identity and limits"
-        title="Agents"
-        description="Review lifecycle state, environments, risk, and reliability budgets for every registered agent."
-      />
-      <QueryBoundary
-        data={query.data}
-        error={query.error}
-        loading={query.isLoading}
-        empty="Register an agent through the API to begin controlling its tool access."
-      >
-        {(agents) => (
-          <div className="agent-grid">
-            {agents.map((agent) => (
-              <article className="agent-card" key={agent.id}>
-                <header>
-                  <span className="agent-avatar">
-                    <Bot size={22} />
-                  </span>
-                  <div>
-                    <h2>{agent.name}</h2>
-                    <p>{agent.description ?? "No description provided"}</p>
-                  </div>
-                  <StatusPill value={agent.status} />
-                </header>
-                <div className="agent-meta">
-                  <div>
-                    <span>Risk tier</span>
-                    <StatusPill value={agent.risk_tier} />
-                  </div>
-                  <div>
-                    <span>Environments</span>
-                    <strong>{agent.allowed_environments.join(", ")}</strong>
-                  </div>
-                  <div>
-                    <span>Daily budget</span>
-                    <strong>
-                      {agent.budget_config.max_executions_per_day.toLocaleString()}{" "}
-                      executions
-                    </strong>
-                  </div>
-                  <div>
-                    <span>Rate limit</span>
-                    <strong>
-                      {agent.budget_config.max_decisions_per_minute}/minute
-                    </strong>
-                  </div>
-                </div>
-                <footer>
-                  <span>Updated {formatDate(agent.updated_at)}</span>
-                  <span className="mono">{shortId(agent.id)}</span>
-                </footer>
-              </article>
-            ))}
-          </div>
-        )}
-      </QueryBoundary>
-    </>
-  );
-}
-
-export function ToolsView() {
-  const query = useQuery({
-    queryKey: ["tools"],
-    queryFn: () => apiGet<Tool[]>("/tools"),
-  });
-  return (
-    <>
-      <PageHeader
-        eyebrow="Registered capabilities"
-        title="Tools"
-        description="Inspect adapter bindings, input contracts, timeouts, and capability classifications."
-      />
-      <Panel
-        title="Tool registry"
-        subtitle="Only registered adapters can be selected for controlled execution"
-      >
-        <QueryBoundary
-          data={query.data}
-          error={query.error}
-          loading={query.isLoading}
-          empty="Register the first controlled tool through the API."
-        >
-          {(tools) => (
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Tool</th>
-                    <th>Risk</th>
-                    <th>Capabilities</th>
-                    <th>Adapter</th>
-                    <th>Timeout</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tools.map((tool) => (
-                    <tr key={tool.id}>
-                      <td>
-                        <span className="name-cell">
-                          <i>
-                            <Wrench size={16} />
-                          </i>
-                          <span>
-                            <strong>{tool.name}</strong>
-                            <small>
-                              {tool.description ?? shortId(tool.id)}
-                            </small>
-                          </span>
-                        </span>
-                      </td>
-                      <td>
-                        <StatusPill value={tool.risk_class} />
-                      </td>
-                      <td>
-                        <div className="tag-list">
-                          {tool.capability_flags.map((flag) => (
-                            <span key={flag}>{titleCase(flag)}</span>
-                          ))}
-                        </div>
-                      </td>
-                      <td>
-                        <span className="mono">
-                          {tool.adapter_name}@{tool.adapter_version}
-                        </span>
-                      </td>
-                      <td>{tool.execution_timeout_seconds}s</td>
-                      <td>
-                        <StatusPill value={tool.status} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </QueryBoundary>
-      </Panel>
-    </>
-  );
 }
 
 export function PoliciesView() {

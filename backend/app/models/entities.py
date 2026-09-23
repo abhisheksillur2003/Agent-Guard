@@ -58,9 +58,9 @@ class User(TimestampMixin, Base):
     )
     email: Mapped[str] = mapped_column(String(320), nullable=False)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
-    role: Mapped[UserRole] = mapped_column(String(20), nullable=False)
+    role: Mapped[UserRole] = mapped_column(String(32), nullable=False)
     status: Mapped[UserStatus] = mapped_column(
-        String(20), default=UserStatus.ACTIVE, nullable=False
+        String(32), default=UserStatus.ACTIVE, nullable=False
     )
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
@@ -82,9 +82,9 @@ class Agent(TimestampMixin, Base):
     description: Mapped[str | None] = mapped_column(Text)
     owner_user_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     status: Mapped[AgentStatus] = mapped_column(
-        String(20), default=AgentStatus.ACTIVE, nullable=False
+        String(32), default=AgentStatus.ACTIVE, nullable=False
     )
-    risk_tier: Mapped[RiskTier] = mapped_column(String(20), default=RiskTier.MEDIUM, nullable=False)
+    risk_tier: Mapped[RiskTier] = mapped_column(String(32), default=RiskTier.MEDIUM, nullable=False)
     allowed_environments: Mapped[list[str]] = mapped_column(JSONB, default=list, nullable=False)
     budget_config: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, nullable=False)
 
@@ -103,7 +103,7 @@ class AgentCredential(Base):
     key_prefix: Mapped[str] = mapped_column(String(24), nullable=False, unique=True)
     secret_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     status: Mapped[CredentialStatus] = mapped_column(
-        String(20), default=CredentialStatus.ACTIVE, nullable=False
+        String(32), default=CredentialStatus.ACTIVE, nullable=False
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -129,10 +129,10 @@ class Tool(TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
     input_schema: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
-    risk_class: Mapped[RiskTier] = mapped_column(String(20), nullable=False)
+    risk_class: Mapped[RiskTier] = mapped_column(String(32), nullable=False)
     capability_flags: Mapped[list[str]] = mapped_column(JSONB, default=list, nullable=False)
     status: Mapped[ToolStatus] = mapped_column(
-        String(20), default=ToolStatus.ACTIVE, nullable=False
+        String(32), default=ToolStatus.ACTIVE, nullable=False
     )
     adapter_name: Mapped[str] = mapped_column(String(80), default="safe_echo", nullable=False)
     adapter_version: Mapped[str] = mapped_column(String(40), default="1", nullable=False)
@@ -163,7 +163,7 @@ class AuditLog(Base):
     organization_id: Mapped[UUID] = mapped_column(
         ForeignKey("organizations.id", ondelete="RESTRICT"), nullable=False
     )
-    actor_type: Mapped[ActorType] = mapped_column(String(20), nullable=False)
+    actor_type: Mapped[ActorType] = mapped_column(String(32), nullable=False)
     actor_id: Mapped[UUID | None]
     action: Mapped[str] = mapped_column(String(120), nullable=False)
     target_type: Mapped[str] = mapped_column(String(80), nullable=False)

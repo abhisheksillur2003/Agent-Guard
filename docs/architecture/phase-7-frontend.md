@@ -17,8 +17,9 @@ FastAPI remains responsible for authentication, roles, tenant isolation, validat
 ## Views
 
 - dashboard metrics, execution activity, and agent risk distribution
-- agent reliability and lifecycle overview
-- tool registry and adapter configuration
+- agent registration, reliability budgets, lifecycle controls, and credential rotation
+- tool registry, adapter configuration, lifecycle status, and validated contracts
+- agent-to-tool permission grants with operation and constraint controls
 - immutable policy overview
 - approval queue with approve and reject actions
 - execution history and attempt state
@@ -28,7 +29,7 @@ FastAPI remains responsible for authentication, roles, tenant isolation, validat
 
 ## Demo mode
 
-`NEXT_PUBLIC_DEMO_MODE=true` loads synthetic local records for UI review. It does not call protected APIs, does not contain credentials, and is disabled by default. Production deployments must leave demo mode disabled.
+`NEXT_PUBLIC_DEMO_MODE=true` loads synthetic local records for UI review. It does not call protected APIs, does not contain credentials, and is disabled by default. Management controls remain read-only in demo mode. Production deployments must leave demo mode disabled.
 
 ## Completion criteria
 

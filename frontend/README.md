@@ -12,6 +12,8 @@ pnpm --dir frontend dev
 
 The console is available at `http://127.0.0.1:3000`. Start FastAPI at `http://127.0.0.1:8000` before signing in.
 
+Administrators can register agents and tools, change lifecycle status, issue or rotate agent credentials, and manage agent-to-tool permissions. Developers can register and edit agents and tools. The console hides management actions from roles that cannot perform them, while FastAPI remains the source of truth for authorization.
+
 For visual review without backend data, set `NEXT_PUBLIC_DEMO_MODE=true` in `frontend/.env.local`. Demo mode contains synthetic records only and is disabled by default.
 
 ## Verify

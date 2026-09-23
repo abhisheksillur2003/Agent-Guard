@@ -22,9 +22,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import { Brand } from "@/components/brand";
-import { demoUser } from "@/lib/demo-data";
-import { demoMode } from "@/lib/api-client";
-import type { CurrentUser } from "@/lib/types";
+import { getCurrentUser } from "@/lib/api-client";
 import { useUiStore } from "@/lib/ui-store";
 
 const navigation = [
@@ -39,19 +37,11 @@ const navigation = [
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ] as const;
 
-async function getSession(): Promise<CurrentUser> {
-  if (demoMode) return demoUser;
-  const response = await fetch("/api/auth/session", { cache: "no-store" });
-  if (!response.ok) throw new Error("Your session has expired");
-  const data = (await response.json()) as { user: CurrentUser };
-  return data.user;
-}
-
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { mobileNavigationOpen, setMobileNavigationOpen } = useUiStore();
-  const session = useQuery({ queryKey: ["session"], queryFn: getSession });
+  const session = useQuery({ queryKey: ["session"], queryFn: getCurrentUser });
   const initials = session.data?.email.slice(0, 2).toUpperCase() ?? "AG";
 
   async function logout() {
