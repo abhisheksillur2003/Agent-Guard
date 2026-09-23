@@ -19,7 +19,7 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title="AgentGuard API",
         description="Security, reliability, and observability control plane for AI agents.",
-        version="0.6.0",
+        version="0.7.0",
     )
 
     @application.exception_handler(ApplicationError)

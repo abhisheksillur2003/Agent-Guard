@@ -1,6 +1,6 @@
 # AgentGuard
 
-AgentGuard is a local-first security, reliability, and observability control plane for tool-using AI agents. Phase 1 provides the typed FastAPI and PostgreSQL foundation. Phase 2 adds tenant-scoped identities, registries, permissions, and audit records. Phase 3 adds immutable policy versions and a durable, deny-by-default decision gateway. Phase 4 adds human approvals and controlled, idempotent tool execution. Phase 5 adds deterministic secret, PII, and prompt-injection protection. Phase 6 adds rate limits, execution budgets, loop detection, bounded retries, and background reconciliation.
+AgentGuard is a local-first security, reliability, and observability control plane for tool-using AI agents. Phase 1 provides the typed FastAPI and PostgreSQL foundation. Phase 2 adds tenant-scoped identities, registries, permissions, and audit records. Phase 3 adds immutable policy versions and a durable, deny-by-default decision gateway. Phase 4 adds human approvals and controlled, idempotent tool execution. Phase 5 adds deterministic secret, PII, and prompt-injection protection. Phase 6 adds rate limits, execution budgets, loop detection, bounded retries, and background reconciliation. Phase 7 adds the authenticated Next.js operations console.
 
 ## Prerequisites
 
@@ -8,8 +8,8 @@ AgentGuard is a local-first security, reliability, and observability control pla
 - [uv](https://docs.astral.sh/uv/)
 - Docker Desktop with Docker Compose
 - Git
-
-Node.js is reserved for the frontend phase and is not required for the current backend foundation.
+- Node.js 24 LTS
+- pnpm 11
 
 ## Local setup
 
@@ -20,11 +20,13 @@ docker compose up -d postgres redis
 uv run alembic upgrade head
 uv run agentguard-admin create-admin --organization "AgentGuard Local" --slug agentguard-local --email admin@example.com
 uv run uvicorn backend.app.main:app --reload
+pnpm --dir frontend install --frozen-lockfile
+pnpm --dir frontend dev
 ```
 
 The administrator command prompts for a password without echoing it. Use at least 12 characters. Set independent random values for `AGENTGUARD_AUTH_SIGNING_KEY` and `AGENTGUARD_AGENT_KEY_PEPPER` before using the service outside disposable local development.
 
-The API will be available at `http://127.0.0.1:8000`.
+The API will be available at `http://127.0.0.1:8000`. The frontend will be available at `http://127.0.0.1:3000`.
 
 - Liveness: `GET /healthz`
 - Readiness: `GET /readyz`
@@ -150,6 +152,10 @@ uv run ruff check .
 uv run pyright
 uv run pytest
 uv run alembic heads
+pnpm --dir frontend format:check
+pnpm --dir frontend lint
+pnpm --dir frontend typecheck
+pnpm --dir frontend build
 ```
 
 With PostgreSQL running, verify migrations in both directions:
@@ -175,13 +181,13 @@ docs/
   adr/                   Architecture decision records
   architecture/          Current architecture notes
 evals/                   Future security evaluation corpus
-frontend/                Reserved for the dashboard phase
+frontend/                Next.js operations console
 scripts/                 Repository automation
 ```
 
 ## Current scope
 
-Phases 1 through 6 are complete. Production tool integrations, local models, observability, and the dashboard remain future phases.
+Phases 1 through 7 are complete. Production tool integrations, local models, and infrastructure observability remain future phases.
 
 ## Security posture
 
