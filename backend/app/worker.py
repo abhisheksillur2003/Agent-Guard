@@ -4,6 +4,7 @@ from typing import Any
 from celery import Celery  # pyright: ignore[reportMissingTypeStubs]
 
 from backend.app.core.config import get_settings
+from backend.app.core.observability import configure_tracing
 from backend.app.db.session import get_engine, get_session_factory
 from backend.app.services.reliability_jobs import (
     expire_due_approvals,
@@ -11,6 +12,7 @@ from backend.app.services.reliability_jobs import (
 )
 
 settings = get_settings()
+tracer = configure_tracing(settings)
 celery_app: Any = Celery("agentguard", broker=settings.redis_url)
 celery_app.conf.update(
     broker_connection_retry_on_startup=True,
@@ -53,11 +55,17 @@ async def _reconcile_stale_executions() -> int:
 
 
 def expire_due_approvals_task() -> int:
-    return asyncio.run(_expire_due_approvals())
+    with tracer.start_as_current_span("maintenance.expire_due_approvals") as span:
+        count = asyncio.run(_expire_due_approvals())
+        span.set_attribute("agentguard.records_affected", count)
+        return count
 
 
 def reconcile_stale_executions_task() -> int:
-    return asyncio.run(_reconcile_stale_executions())
+    with tracer.start_as_current_span("maintenance.reconcile_stale_executions") as span:
+        count = asyncio.run(_reconcile_stale_executions())
+        span.set_attribute("agentguard.records_affected", count)
+        return count
 
 
 celery_app.task(name="agentguard.expire_due_approvals")(expire_due_approvals_task)

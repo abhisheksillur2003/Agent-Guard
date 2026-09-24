@@ -1,6 +1,6 @@
 # AgentGuard
 
-AgentGuard is a local-first security, reliability, and observability control plane for tool-using AI agents. Phase 1 provides the typed FastAPI and PostgreSQL foundation. Phase 2 adds tenant-scoped identities, registries, permissions, and audit records. Phase 3 adds immutable policy versions and a durable, deny-by-default decision gateway. Phase 4 adds human approvals and controlled, idempotent tool execution. Phase 5 adds deterministic secret, PII, and prompt-injection protection. Phase 6 adds rate limits, execution budgets, loop detection, bounded retries, and background reconciliation. Phase 7 adds the authenticated Next.js operations console.
+AgentGuard is a local-first security, reliability, and observability control plane for tool-using AI agents. Phase 1 provides the typed FastAPI and PostgreSQL foundation. Phase 2 adds tenant-scoped identities, registries, permissions, and audit records. Phase 3 adds immutable policy versions and a durable, deny-by-default decision gateway. Phase 4 adds human approvals and controlled, idempotent tool execution. Phase 5 adds deterministic secret, PII, and prompt-injection protection. Phase 6 adds rate limits, execution budgets, loop detection, bounded retries, and background reconciliation. Phase 7 adds the authenticated Next.js operations console. Phase 8 adds privacy-safe metrics, traces, and local monitoring dashboards.
 
 ## Prerequisites
 
@@ -31,6 +31,7 @@ The API will be available at `http://127.0.0.1:8000`. The frontend will be avail
 - Liveness: `GET /healthz`
 - Readiness: `GET /readyz`
 - OpenAPI: `GET /docs`
+- Prometheus metrics: `GET /metrics`
 
 `/healthz` reports whether the API process is alive. `/readyz` verifies that PostgreSQL is reachable and returns HTTP 503 when it is not.
 
@@ -144,6 +145,17 @@ uv run celery -A backend.app.worker:celery_app worker --pool=solo --loglevel=INF
 uv run celery -A backend.app.worker:celery_app beat --loglevel=INFO
 ```
 
+## Phase 8 observability
+
+Start the local monitoring profile, then restart FastAPI with the OTLP endpoint from `.env`:
+
+```powershell
+docker compose --profile observability up -d
+uv run uvicorn backend.app.main:app --reload
+```
+
+Prometheus scrapes privacy-safe API metrics from `/metrics`. Open Grafana at `http://127.0.0.1:3001` for the provisioned AgentGuard dashboard, Prometheus at `http://127.0.0.1:9090`, and Tempo at `http://127.0.0.1:3200` for trace storage. Monitoring ports bind to localhost. The dashboard stack is optional and uses only open-source local services.
+
 ## Verification
 
 ```powershell
@@ -187,7 +199,7 @@ scripts/                 Repository automation
 
 ## Current scope
 
-Phases 1 through 7 are complete. Production tool integrations, local models, and infrastructure observability remain future phases.
+Phases 1 through 8 are complete. Production tool integrations and optional local-model classification remain future phases.
 
 ## Security posture
 

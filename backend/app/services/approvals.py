@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.core.errors import AuthorizationError, ConflictError, NotFoundError
+from backend.app.core.observability import record_approval_transition
 from backend.app.models import ActorType, Agent, ApprovalRequest, ApprovalStatus
 from backend.app.services.audit import record_audit
 
@@ -112,6 +113,7 @@ async def decide_approval(
         raise NotFoundError("Approval request")
     if await _expire_if_needed(session, approval, request_id=request_id):
         await session.commit()
+        record_approval_transition(ApprovalStatus.EXPIRED)
         raise ConflictError("Approval request has expired")
     if approval.status != ApprovalStatus.PENDING:
         raise ConflictError("Approval request has already been decided")
@@ -143,6 +145,7 @@ async def decide_approval(
     )
     await session.commit()
     await session.refresh(approval)
+    record_approval_transition(status)
     return approval
 
 

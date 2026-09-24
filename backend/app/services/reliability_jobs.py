@@ -3,6 +3,7 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.app.core.observability import record_approval_transition
 from backend.app.models import (
     ActorType,
     ApprovalRequest,
@@ -45,6 +46,7 @@ async def expire_due_approvals(session: AsyncSession) -> int:
         )
     if approvals:
         await session.commit()
+        record_approval_transition(ApprovalStatus.EXPIRED, len(approvals))
     return len(approvals)
 
 

@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.core.config import get_settings
 from backend.app.core.errors import ConflictError, NotFoundError
+from backend.app.core.observability import record_policy_decision
 from backend.app.models import (
     ActorType,
     Agent,
@@ -219,6 +220,7 @@ async def _store_decision(
             return existing
         raise ConflictError("Idempotency key was already used for a different request") from None
     await session.refresh(decision)
+    record_policy_decision(outcome, security_findings or [])
     return decision
 
 

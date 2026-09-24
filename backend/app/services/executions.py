@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.core.config import get_settings
 from backend.app.core.errors import AuthorizationError, ConflictError, NotFoundError
+from backend.app.core.observability import record_execution_attempt
 from backend.app.models import (
     ActorType,
     Agent,
@@ -260,6 +261,7 @@ async def _run_execution_attempt(
     )
     await session.commit()
     await session.refresh(execution)
+    record_execution_attempt(execution.status)
     return execution
 
 

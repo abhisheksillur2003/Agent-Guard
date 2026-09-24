@@ -10,6 +10,7 @@ from backend.app.api.router import api_router
 from backend.app.core.config import get_settings
 from backend.app.core.errors import ApplicationError
 from backend.app.core.logging import configure_logging
+from backend.app.core.observability import install_observability
 
 
 def create_app() -> FastAPI:
@@ -19,7 +20,7 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title="AgentGuard API",
         description="Security, reliability, and observability control plane for AI agents.",
-        version="0.7.0",
+        version=settings.service_version,
     )
 
     @application.exception_handler(ApplicationError)
@@ -42,6 +43,7 @@ def create_app() -> FastAPI:
         response.headers["x-request-id"] = request_id
         return response
 
+    install_observability(application, settings)
     application.include_router(api_router)
     return application
 

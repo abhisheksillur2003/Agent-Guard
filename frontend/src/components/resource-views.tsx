@@ -359,6 +359,12 @@ export function SettingsView() {
       tone: "Phase 6",
     },
     {
+      icon: Gauge,
+      label: "Metrics + traces",
+      value: "Prometheus + Tempo",
+      tone: "Phase 8",
+    },
+    {
       icon: CheckCircle2,
       label: "Security model",
       value: "Deterministic deny",
@@ -408,6 +414,10 @@ export function SettingsView() {
             <code>
               uv run celery -A backend.app.worker:celery_app worker --pool=solo
             </code>
+          </div>
+          <div>
+            <span>5</span>
+            <code>docker compose --profile observability up -d</code>
           </div>
         </div>
       </Panel>

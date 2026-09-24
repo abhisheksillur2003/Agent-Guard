@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     execution_decision_ttl_minutes: int = Field(default=15, ge=1, le=1440)
     redis_url: str = "redis://localhost:6379/0"
     stale_execution_seconds: int = Field(default=300, ge=30, le=86_400)
+    service_version: str = "0.8.0"
+    otel_service_name: str = "agentguard-api"
+    otel_traces_endpoint: str | None = None
 
     @model_validator(mode="after")
     def reject_local_secrets_in_production(self) -> "Settings":
