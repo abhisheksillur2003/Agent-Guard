@@ -1,6 +1,6 @@
 # AgentGuard
 
-AgentGuard is a local-first security, reliability, and observability control plane for tool-using AI agents. Phase 1 provides the typed FastAPI and PostgreSQL foundation. Phase 2 adds tenant-scoped identities, registries, permissions, and audit records. Phase 3 adds immutable policy versions and a durable, deny-by-default decision gateway. Phase 4 adds human approvals and controlled, idempotent tool execution. Phase 5 adds deterministic secret, PII, and prompt-injection protection. Phase 6 adds rate limits, execution budgets, loop detection, bounded retries, and background reconciliation. Phase 7 adds the authenticated Next.js operations console. Phase 8 adds privacy-safe metrics, traces, and local monitoring dashboards.
+AgentGuard is a local-first security, reliability, and observability control plane for tool-using AI agents. Phase 1 provides the typed FastAPI and PostgreSQL foundation. Phase 2 adds tenant-scoped identities, registries, permissions, and audit records. Phase 3 adds immutable policy versions and a durable, deny-by-default decision gateway. Phase 4 adds human approvals and controlled, idempotent tool execution. Phase 5 adds deterministic secret, PII, and prompt-injection protection. Phase 6 adds rate limits, execution budgets, loop detection, bounded retries, and background reconciliation. Phase 7 adds the authenticated Next.js operations console. Phase 8 adds privacy-safe metrics, traces, and local monitoring dashboards. Phase 9 adds optional, advisory local-model classification through Ollama.
 
 ## Prerequisites
 
@@ -10,6 +10,7 @@ AgentGuard is a local-first security, reliability, and observability control pla
 - Git
 - Node.js 24 LTS
 - pnpm 11
+- Ollama with `llama3.2:3b` for optional local AI review
 
 ## Local setup
 
@@ -156,6 +157,21 @@ uv run uvicorn backend.app.main:app --reload
 
 Prometheus scrapes privacy-safe API metrics from `/metrics`. Open Grafana at `http://127.0.0.1:3001` for the provisioned AgentGuard dashboard, Prometheus at `http://127.0.0.1:9090`, and Tempo at `http://127.0.0.1:3200` for trace storage. Monitoring ports bind to localhost. The dashboard stack is optional and uses only open-source local services.
 
+## Phase 9 local AI review
+
+Ollama provides an optional local classifier for analyst review. Install and start Ollama, then download the configured model:
+
+```powershell
+ollama pull llama3.2:3b
+ollama serve
+```
+
+If a newly opened PowerShell window cannot find `ollama`, restart the terminal after installation or run `%LOCALAPPDATA%\Programs\Ollama\ollama.exe` directly. The Windows Ollama application normally starts the service automatically.
+
+Authenticated users can inspect readiness at `GET /api/v1/local-ai/status` and submit up to 8,000 characters to `POST /api/v1/local-ai/classify`. The Security page exposes the same local review workflow. Input and model output are not persisted; the audit record stores only the model name, input length, and the fact that the result was advisory.
+
+The model runs with structured output, temperature zero, bounded generation, and proxy inheritance disabled. Its classifications are evidence only. They never grant access, execute tools, or override deterministic permission, detector, policy, approval, or reliability outcomes. Ollama failures return an explicit unavailable or invalid-response error.
+
 ## Verification
 
 ```powershell
@@ -199,8 +215,8 @@ scripts/                 Repository automation
 
 ## Current scope
 
-Phases 1 through 8 are complete. Production tool integrations and optional local-model classification remain future phases.
+Phases 1 through 9 are complete. Production tool integrations and online deployment remain future phases.
 
 ## Security posture
 
-AgentGuard will use deterministic permissions and policies as the final authority for security-critical decisions. Model-generated classifications may add evidence later, but they will not override access-control denials.
+AgentGuard uses deterministic permissions and policies as the final authority for security-critical decisions. Model-generated classifications add advisory evidence but cannot override access-control denials.

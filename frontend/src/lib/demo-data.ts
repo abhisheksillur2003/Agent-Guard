@@ -8,6 +8,8 @@ import type {
   SecurityDetector,
   SecurityFinding,
   Tool,
+  LocalAIClassification,
+  LocalAIStatus,
 } from "@/lib/types";
 
 const org = "10000000-0000-4000-8000-000000000001";
@@ -30,6 +32,23 @@ export const demoUser: CurrentUser = {
   status: "active",
   created_at: iso(1),
   last_login_at: iso(22, 18),
+};
+
+const demoLocalAIStatus: LocalAIStatus = {
+  available: true,
+  model: "llama3.2:3b",
+  model_available: true,
+  installed_models: ["llama3.2:3b"],
+  advisory_only: true,
+};
+
+const demoLocalAIClassification: LocalAIClassification = {
+  risk_level: "high",
+  confidence: 0.92,
+  categories: ["prompt_injection"],
+  rationale: "The text attempts to replace trusted instructions.",
+  model: "llama3.2:3b",
+  advisory_only: true,
 };
 
 export const demoAgents: Agent[] = [
@@ -267,6 +286,9 @@ export const demoAudit: AuditEvent[] = demoExecutions
   }));
 
 export function demoResponse(path: string, method: string): unknown {
+  if (path === "/local-ai/status") return demoLocalAIStatus;
+  if (path === "/local-ai/classify" && method === "POST")
+    return demoLocalAIClassification;
   if (path === "/agents") return demoAgents;
   if (path === "/tools") return demoTools;
   if (path === "/policies") return demoPolicies;

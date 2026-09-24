@@ -32,3 +32,13 @@ class ConflictError(ApplicationError):
 class ValidationError(ApplicationError):
     def __init__(self, message: str) -> None:
         super().__init__(HTTPStatus.UNPROCESSABLE_ENTITY, "VALIDATION_FAILED", message)
+
+
+class DependencyUnavailableError(ApplicationError):
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(HTTPStatus.SERVICE_UNAVAILABLE, code, message)
+
+
+class UpstreamResponseError(ApplicationError):
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(HTTPStatus.BAD_GATEWAY, code, message)

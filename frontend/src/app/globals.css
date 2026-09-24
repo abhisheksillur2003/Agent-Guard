@@ -1158,6 +1158,77 @@ table {
   color: #1b3047;
   font-size: 15px;
 }
+
+.local-ai-review {
+  display: grid;
+  gap: 16px;
+}
+
+.local-ai-review label {
+  display: grid;
+  gap: 8px;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.local-ai-review textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  padding: 13px 14px;
+  font: inherit;
+  line-height: 1.55;
+  text-transform: none;
+}
+
+.local-ai-review textarea:focus {
+  border-color: var(--blue);
+  outline: 3px solid color-mix(in srgb, var(--blue) 15%, transparent);
+}
+
+.local-ai-actions,
+.local-ai-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.local-ai-actions small,
+.local-ai-result small {
+  color: var(--ink-muted);
+}
+
+.local-ai-result {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+  padding: 14px;
+}
+
+.local-ai-result > div {
+  flex: 1;
+}
+
+.local-ai-result p {
+  margin: 4px 0;
+  color: var(--ink-muted);
+}
+
+.local-ai-result em {
+  color: var(--amber);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 .two-column {
   display: grid;
   grid-template-columns: 1fr 1fr;

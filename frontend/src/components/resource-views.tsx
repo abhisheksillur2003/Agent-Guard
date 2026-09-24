@@ -1,7 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
+  BrainCircuit,
   CheckCircle2,
   Database,
   Gauge,
@@ -19,11 +21,13 @@ import {
   Panel,
   StatusPill,
 } from "@/components/ui";
-import { apiGet, demoMode } from "@/lib/api-client";
+import { apiGet, apiPost, demoMode } from "@/lib/api-client";
 import { formatDate, shortId, titleCase } from "@/lib/format";
 import type {
   AuditEvent,
   Execution,
+  LocalAIClassification,
+  LocalAIStatus,
   Policy,
   SecurityDetector,
   SecurityFinding,
@@ -181,6 +185,7 @@ export function RunsView() {
 }
 
 export function SecurityView() {
+  const [classificationInput, setClassificationInput] = useState("");
   const findings = useQuery({
     queryKey: ["findings"],
     queryFn: () => apiGet<SecurityFinding[]>("/security/findings"),
@@ -188,6 +193,14 @@ export function SecurityView() {
   const detectors = useQuery({
     queryKey: ["detectors"],
     queryFn: () => apiGet<SecurityDetector[]>("/security/detectors"),
+  });
+  const localAI = useQuery({
+    queryKey: ["local-ai-status"],
+    queryFn: () => apiGet<LocalAIStatus>("/local-ai/status"),
+  });
+  const classification = useMutation({
+    mutationFn: (content: string) =>
+      apiPost<LocalAIClassification>("/local-ai/classify", { content }),
   });
   return (
     <>
@@ -213,7 +226,72 @@ export function SecurityView() {
           <TimerReset size={20} />
           <b>100k</b> character scan bound
         </span>
+        <span>
+          <BrainCircuit size={20} />
+          <b>{localAI.data?.model_available ? "Ready" : "Offline"}</b> local AI
+        </span>
       </div>
+      <Panel
+        title="Local AI review"
+        subtitle="Advisory classification only; deterministic controls remain authoritative"
+      >
+        <form
+          className="local-ai-review"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const content = classificationInput.trim();
+            if (content) classification.mutate(content);
+          }}
+        >
+          <label>
+            Content to review
+            <textarea
+              maxLength={8000}
+              onChange={(event) => setClassificationInput(event.target.value)}
+              placeholder="Paste content for a private local risk classification"
+              rows={5}
+              value={classificationInput}
+            />
+          </label>
+          <div className="local-ai-actions">
+            <small>
+              {localAI.data?.model_available
+                ? `${localAI.data.model} runs through Ollama on this computer.`
+                : "Start Ollama and install the configured model to classify content."}
+            </small>
+            <button
+              className="primary-button"
+              disabled={
+                !classificationInput.trim() ||
+                !localAI.data?.model_available ||
+                classification.isPending
+              }
+              type="submit"
+            >
+              {classification.isPending ? "Classifying…" : "Classify locally"}
+            </button>
+          </div>
+          {classification.error ? (
+            <ErrorState error={classification.error} />
+          ) : null}
+          {classification.data ? (
+            <div className="local-ai-result">
+              <StatusPill value={classification.data.risk_level} />
+              <div>
+                <strong>
+                  {Math.round(classification.data.confidence * 100)}% confidence
+                </strong>
+                <p>{classification.data.rationale}</p>
+                <small>
+                  {classification.data.categories.map(titleCase).join(" · ") ||
+                    "No risk category"}
+                </small>
+              </div>
+              <em>Advisory</em>
+            </div>
+          ) : null}
+        </form>
+      </Panel>
       <div className="two-column">
         <Panel
           title="Detector registry"
@@ -339,7 +417,17 @@ export function AuditView() {
 }
 
 export function SettingsView() {
+  const localAI = useQuery({
+    queryKey: ["local-ai-status"],
+    queryFn: () => apiGet<LocalAIStatus>("/local-ai/status"),
+  });
   const checks = [
+    {
+      icon: BrainCircuit,
+      label: "Local AI",
+      value: localAI.data?.model ?? "Ollama",
+      tone: localAI.data?.model_available ? "Ready" : "Unavailable",
+    },
     {
       icon: Server,
       label: "FastAPI gateway",
@@ -418,6 +506,10 @@ export function SettingsView() {
           <div>
             <span>5</span>
             <code>docker compose --profile observability up -d</code>
+          </div>
+          <div>
+            <span>6</span>
+            <code>ollama serve</code>
           </div>
         </div>
       </Panel>

@@ -6,6 +6,7 @@ from backend.app.api.v1.routes import (
     audit,
     auth,
     executions,
+    local_ai,
     organization,
     permissions,
     policies,
@@ -27,4 +28,5 @@ router.include_router(policies.router)
 router.include_router(security.router)
 router.include_router(tool_requests.router)
 router.include_router(executions.router)
+router.include_router(local_ai.router)
 router.include_router(audit.router)

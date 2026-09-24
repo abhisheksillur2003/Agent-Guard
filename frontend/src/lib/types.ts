@@ -185,3 +185,20 @@ export interface AuditEvent {
   request_id: string | null;
   created_at: string;
 }
+
+export interface LocalAIStatus {
+  available: boolean;
+  model: string;
+  model_available: boolean;
+  installed_models: string[];
+  advisory_only: true;
+}
+
+export interface LocalAIClassification {
+  risk_level: RiskTier;
+  confidence: number;
+  categories: string[];
+  rationale: string;
+  model: string;
+  advisory_only: true;
+}
