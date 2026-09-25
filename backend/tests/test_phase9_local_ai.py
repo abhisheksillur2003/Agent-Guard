@@ -5,7 +5,7 @@ import pytest
 from sqlalchemy import select
 
 from backend.app.core.config import Settings
-from backend.app.core.errors import UpstreamResponseError
+from backend.app.core.errors import DependencyUnavailableError, UpstreamResponseError
 from backend.app.models import AuditLog
 from backend.app.schemas.local_ai import LocalAIClassificationResponse
 from backend.app.services import local_ai
@@ -74,6 +74,17 @@ async def test_invalid_model_output_fails_without_guessing() -> None:
             await local_ai.classify(Settings(), "review this", client)
 
     assert raised.value.code == "LOCAL_AI_RESPONSE_INVALID"
+
+
+async def test_disabled_local_ai_never_contacts_ollama() -> None:
+    settings = Settings(local_ai_enabled=False)
+    status = await local_ai.get_status(settings)
+
+    with pytest.raises(DependencyUnavailableError) as raised:
+        await local_ai.classify(settings, "review this")
+
+    assert status.available is False
+    assert raised.value.code == "LOCAL_AI_DISABLED"
 
 
 async def test_classification_route_requires_auth_and_audits_no_content(

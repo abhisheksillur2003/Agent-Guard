@@ -1,6 +1,6 @@
 # AgentGuard
 
-AgentGuard is a local-first security, reliability, and observability control plane for tool-using AI agents. Phase 1 provides the typed FastAPI and PostgreSQL foundation. Phase 2 adds tenant-scoped identities, registries, permissions, and audit records. Phase 3 adds immutable policy versions and a durable, deny-by-default decision gateway. Phase 4 adds human approvals and controlled, idempotent tool execution. Phase 5 adds deterministic secret, PII, and prompt-injection protection. Phase 6 adds rate limits, execution budgets, loop detection, bounded retries, and background reconciliation. Phase 7 adds the authenticated Next.js operations console. Phase 8 adds privacy-safe metrics, traces, and local monitoring dashboards. Phase 9 adds optional, advisory local-model classification through Ollama.
+AgentGuard is a local-first security, reliability, and observability control plane for tool-using AI agents. Phase 1 provides the typed FastAPI and PostgreSQL foundation. Phase 2 adds tenant-scoped identities, registries, permissions, and audit records. Phase 3 adds immutable policy versions and a durable, deny-by-default decision gateway. Phase 4 adds human approvals and controlled, idempotent tool execution. Phase 5 adds deterministic secret, PII, and prompt-injection protection. Phase 6 adds rate limits, execution budgets, loop detection, bounded retries, and background reconciliation. Phase 7 adds the authenticated Next.js operations console. Phase 8 adds privacy-safe metrics, traces, and local monitoring dashboards. Phase 9 adds optional, advisory local-model classification through Ollama. Phase 10 adds hardened production containers and an HTTPS deployment stack.
 
 ## Prerequisites
 
@@ -172,6 +172,32 @@ Authenticated users can inspect readiness at `GET /api/v1/local-ai/status` and s
 
 The model runs with structured output, temperature zero, bounded generation, and proxy inheritance disabled. Its classifications are evidence only. They never grant access, execute tools, or override deterministic permission, detector, policy, approval, or reliability outcomes. Ollama failures return an explicit unavailable or invalid-response error.
 
+## Phase 10 production deployment
+
+Phase 10 provides non-root, read-only application containers and a production Compose stack. PostgreSQL and Redis are isolated on internal networks. Caddy is the only public service and obtains HTTPS certificates automatically. API documentation and local AI are disabled by default in production, metrics remain private, and unsafe production secrets or wildcard host configuration stop the API during startup.
+
+Prepare a server with Docker Compose, point the domain's DNS records at it, and allow inbound TCP ports 80 and 443 plus UDP port 443. Generate a private environment file and deploy:
+
+```powershell
+./scripts/prepare-production-env.ps1 `
+  -Domain agentguard.example.com `
+  -AcmeEmail admin@example.com
+
+./scripts/deploy-production.ps1
+```
+
+After the stack is healthy, create the first administrator inside the API container:
+
+```powershell
+docker compose --env-file .env.production -f docker-compose.production.yml exec api `
+  agentguard-admin create-admin `
+  --organization "AgentGuard Production" `
+  --slug agentguard-production `
+  --email admin@example.com
+```
+
+The command prompts for the password without echoing it. Keep `.env.production` off Git and restrict its filesystem permissions. See [`docs/deployment/production.md`](docs/deployment/production.md) for DNS, image publishing, backups, updates, rollback, and verification.
+
 ## Verification
 
 ```powershell
@@ -215,7 +241,7 @@ scripts/                 Repository automation
 
 ## Current scope
 
-Phases 1 through 9 are complete. Production tool integrations and online deployment remain future phases.
+Phases 1 through 10 are complete. A server and domain are required to activate the prepared online deployment. Production tool integrations remain a future phase.
 
 ## Security posture
 

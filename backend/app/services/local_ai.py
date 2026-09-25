@@ -60,6 +60,13 @@ def _model_names(payload: object) -> list[str]:
 async def get_status(
     settings: Settings, client: httpx.AsyncClient | None = None
 ) -> LocalAIStatusResponse:
+    if not settings.local_ai_enabled:
+        return LocalAIStatusResponse(
+            available=False,
+            model=settings.ollama_model,
+            model_available=False,
+            installed_models=[],
+        )
     try:
         async with _client(settings, client) as active_client:
             response = await active_client.get("/api/tags")
@@ -85,6 +92,10 @@ async def classify(
     content: str,
     client: httpx.AsyncClient | None = None,
 ) -> LocalAIClassificationResponse:
+    if not settings.local_ai_enabled:
+        raise DependencyUnavailableError(
+            "LOCAL_AI_DISABLED", "Local AI review is disabled in this environment"
+        )
     schema = LocalAIClassificationResult.model_json_schema()
     payload = {
         "model": settings.ollama_model,

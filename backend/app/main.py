@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from backend.app.api.router import api_router
 from backend.app.core.config import get_settings
@@ -21,7 +22,11 @@ def create_app() -> FastAPI:
         title="AgentGuard API",
         description="Security, reliability, and observability control plane for AI agents.",
         version=settings.service_version,
+        docs_url="/docs" if settings.api_docs_enabled else None,
+        redoc_url="/redoc" if settings.api_docs_enabled else None,
+        openapi_url="/openapi.json" if settings.api_docs_enabled else None,
     )
+    application.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts)
 
     @application.exception_handler(ApplicationError)
     async def application_error_handler(_request: Request, exc: ApplicationError) -> JSONResponse:
