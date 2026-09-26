@@ -1,6 +1,6 @@
 # AgentGuard
 
-AgentGuard is a local-first security, reliability, and observability control plane for tool-using AI agents. Phase 1 provides the typed FastAPI and PostgreSQL foundation. Phase 2 adds tenant-scoped identities, registries, permissions, and audit records. Phase 3 adds immutable policy versions and a durable, deny-by-default decision gateway. Phase 4 adds human approvals and controlled, idempotent tool execution. Phase 5 adds deterministic secret, PII, and prompt-injection protection. Phase 6 adds rate limits, execution budgets, loop detection, bounded retries, and background reconciliation. Phase 7 adds the authenticated Next.js operations console. Phase 8 adds privacy-safe metrics, traces, and local monitoring dashboards. Phase 9 adds optional, advisory local-model classification through Ollama. Phase 10 adds hardened production containers and an HTTPS deployment stack. Phase 11 adds a guarded outbound webhook connector for real tool integrations. Phase 12 adds a typed Python SDK and guarded Ollama agent example.
+AgentGuard is a local-first security, reliability, and observability control plane for tool-using AI agents. Phase 1 provides the typed FastAPI and PostgreSQL foundation. Phase 2 adds tenant-scoped identities, registries, permissions, and audit records. Phase 3 adds immutable policy versions and a durable, deny-by-default decision gateway. Phase 4 adds human approvals and controlled, idempotent tool execution. Phase 5 adds deterministic secret, PII, and prompt-injection protection. Phase 6 adds rate limits, execution budgets, loop detection, bounded retries, and background reconciliation. Phase 7 adds the authenticated Next.js operations console. Phase 8 adds privacy-safe metrics, traces, and local monitoring dashboards. Phase 9 adds optional, advisory local-model classification through Ollama. Phase 10 adds hardened production containers and an HTTPS deployment stack. Phase 11 adds a guarded outbound webhook connector for real tool integrations. Phase 12 adds a typed Python SDK and guarded Ollama agent example. Phase 13 adds native LangChain and CrewAI tool integrations.
 
 ## Prerequisites
 
@@ -228,6 +228,24 @@ uv run python examples/ollama_guarded_agent.py `
 
 Create the agent credential and copy the tool ID from the dashboard. Agent credentials are secrets and must never be committed to `.env` or source control. See [`docs/architecture/phase-12-python-sdk.md`](docs/architecture/phase-12-python-sdk.md) for the client contract, approval continuation, and Windows instructions.
 
+## Phase 13 framework integrations
+
+Phase 13 wraps AgentGuard tools as native LangChain `StructuredTool` and CrewAI `BaseTool` objects. Both wrappers use typed Pydantic inputs, derive stable per-run idempotency keys, return bounded structured results, stop before execution for denied or approval-required decisions, and fail closed when AgentGuard cannot provide a trustworthy result.
+
+Install the optional framework dependencies and run either local Ollama example:
+
+```powershell
+uv sync --extra frameworks
+$env:AGENTGUARD_AGENT_TOKEN = "<agent-credential>"
+$env:AGENTGUARD_TOOL_ID = "00000000-0000-0000-0000-000000000000"
+$env:AGENTGUARD_RUN_ID = "support-session-2026-09-27-001"
+
+uv run python -m examples.langchain_guarded_agent "Refund order ORD-123 for amount 100"
+uv run python -m examples.crewai_guarded_agent "Refund order ORD-123 for amount 100"
+```
+
+The wrappers contain no local tool callback, so framework errors cannot bypass the AgentGuard execution boundary. See [`docs/architecture/phase-13-framework-integrations.md`](docs/architecture/phase-13-framework-integrations.md) for integration examples, approval continuation, and failure behavior.
+
 ## Verification
 
 ```powershell
@@ -273,7 +291,7 @@ scripts/                 Repository automation
 
 ## Current scope
 
-Phases 1 through 12 are complete. A server and domain are required to activate the prepared online deployment. Service-specific connectors and framework adapters remain future phases.
+Phases 1 through 13 are complete. A server and domain are required to activate the prepared online deployment. Service-specific connectors and release operations remain future phases.
 
 ## Security posture
 
