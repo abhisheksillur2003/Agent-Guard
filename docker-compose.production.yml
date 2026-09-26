@@ -1,7 +1,7 @@
 name: agentguard-production
 
 x-backend: &backend
-  image: ${AGENTGUARD_API_IMAGE:-agentguard-api:0.11.0}
+  image: ${AGENTGUARD_API_IMAGE:-agentguard-api:0.12.0}
   build:
     context: .
     dockerfile: backend/Dockerfile
@@ -145,7 +145,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: ${AGENTGUARD_FRONTEND_IMAGE:-agentguard-frontend:0.11.0}
+    image: ${AGENTGUARD_FRONTEND_IMAGE:-agentguard-frontend:0.12.0}
     build:
       context: .
       dockerfile: frontend/Dockerfile

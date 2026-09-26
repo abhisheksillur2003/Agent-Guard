@@ -12,6 +12,7 @@ COPY pyproject.toml uv.lock README.md alembic.ini ./
 COPY backend/__init__.py ./backend/__init__.py
 COPY backend/app ./backend/app
 COPY backend/alembic ./backend/alembic
+COPY agentguard_sdk ./agentguard_sdk
 RUN uv sync --locked --no-dev --no-editable
 
 FROM python:3.13-slim-trixie@sha256:8d9d0b8bcf6506481eae4907c18f5e3e7902e629f5f6d684f9e7c32e85e3ddf0 AS runtime

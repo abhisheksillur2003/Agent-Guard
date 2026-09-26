@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     execution_decision_ttl_minutes: int = Field(default=15, ge=1, le=1440)
     redis_url: str = "redis://localhost:6379/0"
     stale_execution_seconds: int = Field(default=300, ge=30, le=86_400)
-    service_version: str = "0.11.0"
+    service_version: str = "0.12.0"
     otel_service_name: str = "agentguard-api"
     otel_traces_endpoint: str | None = None
     ollama_base_url: str = "http://127.0.0.1:11434"
