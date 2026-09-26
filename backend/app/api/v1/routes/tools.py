@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Request, status
 from backend.app.api.dependencies.auth import DatabaseSession, require_roles
 from backend.app.api.dependencies.request import get_request_id
 from backend.app.models import User, UserRole
-from backend.app.schemas.tools import ToolCreate, ToolResponse, ToolUpdate
+from backend.app.schemas.tools import ToolAdapterResponse, ToolCreate, ToolResponse, ToolUpdate
 from backend.app.services import tools as tool_service
 
 router = APIRouter(prefix="/tools", tags=["tools"])
@@ -45,6 +45,20 @@ async def create_tool(
 async def list_tools(user: AnyUser, session: DatabaseSession) -> list[ToolResponse]:
     tools = await tool_service.list_tools(session, user.organization_id)
     return [ToolResponse.model_validate(tool) for tool in tools]
+
+
+@router.get("/adapters", response_model=list[ToolAdapterResponse])
+async def list_tool_adapters(_user: AnyUser) -> list[ToolAdapterResponse]:
+    return [
+        ToolAdapterResponse(
+            name=item.name,
+            version=item.version,
+            retry_safe=item.retry_safe,
+            required_capabilities=list(item.required_capabilities),
+            configured=item.configured,
+        )
+        for item in tool_service.list_tool_adapters()
+    ]
 
 
 @router.get("/{tool_id}", response_model=ToolResponse)

@@ -43,6 +43,7 @@ from backend.app.services.security_scanning import (
 )
 from backend.app.services.tool_adapters import (
     AdapterExecutionContext,
+    AdapterExecutionError,
     get_adapter,
     sanitize_result,
 )
@@ -230,6 +231,10 @@ async def _run_execution_attempt(
         execution.status = ExecutionStatus.TIMED_OUT
         execution.error_code = "EXECUTION_TIMEOUT"
         event_type = "execution.timed_out"
+    except AdapterExecutionError as exc:
+        execution.status = ExecutionStatus.FAILED
+        execution.error_code = exc.code
+        event_type = "execution.failed"
     except Exception:
         execution.status = ExecutionStatus.FAILED
         execution.error_code = "ADAPTER_EXECUTION_FAILED"

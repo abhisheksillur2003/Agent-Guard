@@ -43,6 +43,7 @@ import type {
   ReliabilityBudget,
   RiskTier,
   Tool,
+  ToolAdapter,
 } from "@/lib/types";
 
 const riskTiers: RiskTier[] = ["low", "medium", "high", "critical"];
@@ -815,6 +816,17 @@ type ToolFormState = {
   schema: string;
   timeout: number;
   status: "active" | "disabled";
+  adapterKey: string;
+};
+
+const webhookInputSchema = {
+  type: "object",
+  properties: {
+    url: { type: "string", format: "uri" },
+    payload: {},
+  },
+  required: ["url", "payload"],
+  additionalProperties: false,
 };
 
 function toolFormState(tool?: Tool): ToolFormState {
@@ -830,16 +842,21 @@ function toolFormState(tool?: Tool): ToolFormState {
     ),
     timeout: tool?.execution_timeout_seconds ?? 10,
     status: tool?.status ?? "active",
+    adapterKey: tool
+      ? `${tool.adapter_name}@${tool.adapter_version}`
+      : "safe_echo@1",
   };
 }
 
 function ToolForm({
   tool,
   user,
+  adapters,
   onClose,
 }: {
   tool?: Tool;
   user: CurrentUser;
+  adapters: ToolAdapter[];
   onClose: () => void;
 }) {
   const queryClient = useQueryClient();
@@ -854,6 +871,10 @@ function ToolForm({
       } catch {
         throw new Error("Input schema must be valid JSON");
       }
+      const adapter = adapters.find(
+        (item) => `${item.name}@${item.version}` === form.adapterKey,
+      );
+      if (!adapter) throw new Error("Select a registered adapter");
       const common = {
         name: form.name.trim(),
         description: form.description.trim() || null,
@@ -862,8 +883,8 @@ function ToolForm({
       const protectedFields = {
         risk_class: form.riskClass,
         capability_flags: form.selectedCapabilities,
-        adapter_name: "safe_echo",
-        adapter_version: "1",
+        adapter_name: adapter.name,
+        adapter_version: adapter.version,
         execution_timeout_seconds: form.timeout,
       };
       if (!tool)
@@ -890,6 +911,28 @@ function ToolForm({
       selectedCapabilities: form.selectedCapabilities.includes(capability)
         ? form.selectedCapabilities.filter((item) => item !== capability)
         : [...form.selectedCapabilities, capability],
+    });
+  }
+
+  function selectAdapter(adapterKey: string) {
+    const adapter = adapters.find(
+      (item) => `${item.name}@${item.version}` === adapterKey,
+    );
+    setForm({
+      ...form,
+      adapterKey,
+      schema:
+        adapter?.name === "http_webhook" && !tool
+          ? JSON.stringify(webhookInputSchema, null, 2)
+          : form.schema,
+      selectedCapabilities: adapter
+        ? Array.from(
+            new Set([
+              ...form.selectedCapabilities,
+              ...adapter.required_capabilities,
+            ]),
+          )
+        : form.selectedCapabilities,
     });
   }
 
@@ -949,7 +992,25 @@ function ToolForm({
           </label>
           <label>
             <span>Adapter</span>
-            <input value="safe_echo@1" disabled />
+            <select
+              value={form.adapterKey}
+              disabled={!!tool && user.role !== "admin"}
+              onChange={(event) => selectAdapter(event.target.value)}
+            >
+              {adapters.map((adapter) => {
+                const key = `${adapter.name}@${adapter.version}`;
+                return (
+                  <option
+                    key={key}
+                    value={key}
+                    disabled={!adapter.configured && key !== form.adapterKey}
+                  >
+                    {key}
+                    {adapter.configured ? "" : " (not configured)"}
+                  </option>
+                );
+              })}
+            </select>
           </label>
           <NumberField
             label="Timeout (seconds)"
@@ -1033,6 +1094,10 @@ export function ToolsView() {
     queryFn: () => apiGet<Tool[]>("/tools"),
   });
   const session = useQuery({ queryKey: ["session"], queryFn: getCurrentUser });
+  const adapters = useQuery({
+    queryKey: ["tool-adapters"],
+    queryFn: () => apiGet<ToolAdapter[]>("/tools/adapters"),
+  });
   const [editing, setEditing] = useState<Tool | "new">();
   const canEdit =
     !demoMode && ["admin", "developer"].includes(session.data?.role ?? "");
@@ -1047,6 +1112,7 @@ export function ToolsView() {
           canEdit && (
             <button
               className="primary-button"
+              disabled={adapters.isLoading || !adapters.data?.length}
               onClick={() => setEditing("new")}
             >
               <Plus size={16} /> Register tool
@@ -1055,6 +1121,7 @@ export function ToolsView() {
         }
       />
       <ManagementNotice user={session.data} />
+      {adapters.error && <ErrorState error={adapters.error} />}
       <Panel
         title="Tool registry"
         subtitle="Only registered adapters can be selected for controlled execution"
@@ -1131,10 +1198,11 @@ export function ToolsView() {
           </div>
         )}
       </Panel>
-      {editing && session.data && (
+      {editing && session.data && adapters.data && (
         <ToolForm
           tool={editing === "new" ? undefined : editing}
           user={session.data}
+          adapters={adapters.data}
           onClose={() => setEditing(undefined)}
         />
       )}

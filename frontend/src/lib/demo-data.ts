@@ -8,6 +8,7 @@ import type {
   SecurityDetector,
   SecurityFinding,
   Tool,
+  ToolAdapter,
   LocalAIClassification,
   LocalAIStatus,
 } from "@/lib/types";
@@ -112,6 +113,23 @@ export const demoTools: Tool[] = [
   created_at: iso(10 + index),
   updated_at: iso(22),
 }));
+
+export const demoToolAdapters: ToolAdapter[] = [
+  {
+    name: "safe_echo",
+    version: "1",
+    retry_safe: true,
+    required_capabilities: [],
+    configured: true,
+  },
+  {
+    name: "http_webhook",
+    version: "1",
+    retry_safe: false,
+    required_capabilities: ["external_egress", "write"],
+    configured: false,
+  },
+];
 
 export const demoPolicies: Policy[] = [
   [
@@ -291,6 +309,7 @@ export function demoResponse(path: string, method: string): unknown {
     return demoLocalAIClassification;
   if (path === "/agents") return demoAgents;
   if (path === "/tools") return demoTools;
+  if (path === "/tools/adapters") return demoToolAdapters;
   if (path === "/policies") return demoPolicies;
   if (path.startsWith("/approvals")) {
     if (method === "POST") {

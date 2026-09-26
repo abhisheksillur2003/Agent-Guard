@@ -15,7 +15,12 @@ from backend.app.core.errors import (
 from backend.app.models import ActorType, Tool, UserRole
 from backend.app.schemas.tools import ToolCreate, ToolUpdate
 from backend.app.services.audit import record_audit
-from backend.app.services.tool_adapters import get_adapter
+from backend.app.services.tool_adapters import (
+    AdapterMetadata,
+    adapter_metadata,
+    get_adapter,
+    validate_adapter_capabilities,
+)
 
 
 def tool_snapshot(tool: Tool) -> dict[str, Any]:
@@ -55,6 +60,10 @@ async def list_tools(session: AsyncSession, organization_id: UUID) -> list[Tool]
     return list(result.all())
 
 
+def list_tool_adapters() -> list[AdapterMetadata]:
+    return adapter_metadata()
+
+
 async def create_tool(
     session: AsyncSession,
     *,
@@ -64,7 +73,8 @@ async def create_tool(
     request_id: str | None,
 ) -> Tool:
     validate_json_schema(data.input_schema)
-    get_adapter(data.adapter_name, data.adapter_version)
+    adapter = get_adapter(data.adapter_name, data.adapter_version)
+    validate_adapter_capabilities(adapter, data.capability_flags)
     duplicate = await session.scalar(
         select(Tool.id).where(
             Tool.organization_id == organization_id,
@@ -119,7 +129,9 @@ async def update_tool(
         validate_json_schema(changes["input_schema"])
     adapter_name = str(changes.get("adapter_name", tool.adapter_name))
     adapter_version = str(changes.get("adapter_version", tool.adapter_version))
-    get_adapter(adapter_name, adapter_version)
+    adapter = get_adapter(adapter_name, adapter_version)
+    capabilities = changes.get("capability_flags", tool.capability_flags)
+    validate_adapter_capabilities(adapter, capabilities)
     if "name" in changes and changes["name"] != tool.name:
         duplicate = await session.scalar(
             select(Tool.id).where(

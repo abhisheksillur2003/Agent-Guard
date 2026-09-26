@@ -58,6 +58,14 @@ export interface Tool {
   updated_at: string;
 }
 
+export interface ToolAdapter {
+  name: string;
+  version: string;
+  retry_safe: boolean;
+  required_capabilities: string[];
+  configured: boolean;
+}
+
 export interface AgentCredential {
   credential: string;
   key_prefix: string;

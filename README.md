@@ -1,6 +1,6 @@
 # AgentGuard
 
-AgentGuard is a local-first security, reliability, and observability control plane for tool-using AI agents. Phase 1 provides the typed FastAPI and PostgreSQL foundation. Phase 2 adds tenant-scoped identities, registries, permissions, and audit records. Phase 3 adds immutable policy versions and a durable, deny-by-default decision gateway. Phase 4 adds human approvals and controlled, idempotent tool execution. Phase 5 adds deterministic secret, PII, and prompt-injection protection. Phase 6 adds rate limits, execution budgets, loop detection, bounded retries, and background reconciliation. Phase 7 adds the authenticated Next.js operations console. Phase 8 adds privacy-safe metrics, traces, and local monitoring dashboards. Phase 9 adds optional, advisory local-model classification through Ollama. Phase 10 adds hardened production containers and an HTTPS deployment stack.
+AgentGuard is a local-first security, reliability, and observability control plane for tool-using AI agents. Phase 1 provides the typed FastAPI and PostgreSQL foundation. Phase 2 adds tenant-scoped identities, registries, permissions, and audit records. Phase 3 adds immutable policy versions and a durable, deny-by-default decision gateway. Phase 4 adds human approvals and controlled, idempotent tool execution. Phase 5 adds deterministic secret, PII, and prompt-injection protection. Phase 6 adds rate limits, execution budgets, loop detection, bounded retries, and background reconciliation. Phase 7 adds the authenticated Next.js operations console. Phase 8 adds privacy-safe metrics, traces, and local monitoring dashboards. Phase 9 adds optional, advisory local-model classification through Ollama. Phase 10 adds hardened production containers and an HTTPS deployment stack. Phase 11 adds a guarded outbound webhook connector for real tool integrations.
 
 ## Prerequisites
 
@@ -172,6 +172,20 @@ Authenticated users can inspect readiness at `GET /api/v1/local-ai/status` and s
 
 The model runs with structured output, temperature zero, bounded generation, and proxy inheritance disabled. Its classifications are evidence only. They never grant access, execute tools, or override deterministic permission, detector, policy, approval, or reliability outcomes. Ollama failures return an explicit unavailable or invalid-response error.
 
+## Phase 11 HTTP webhook connector
+
+Phase 11 adds the first real external tool adapter. The `http_webhook@1` adapter sends an authorized JSON payload to one exact operator-allowlisted URL. It runs only after authentication, schema validation, permission checks, security scanning, policy evaluation, approval when required, reliability checks, and durable execution authorization.
+
+The connector is disabled by default. Configure it in `.env` using an exact URL and an optional runtime-only bearer token:
+
+```dotenv
+AGENTGUARD_HTTP_WEBHOOK_ENABLED=true
+AGENTGUARD_HTTP_WEBHOOK_ALLOWED_URLS=["https://hooks.example.com/agentguard"]
+AGENTGUARD_HTTP_WEBHOOK_BEARER_TOKENS={"https://hooks.example.com/agentguard":"replace-with-at-least-32-random-characters"}
+```
+
+Restart the API, open **Tools**, and select `http_webhook@1`. The UI adds the required `write` and `external_egress` capability flags. The adapter rejects non-allowlisted destinations, redirects, URL credentials, query strings, unsafe private-network destinations, oversized responses, and proxy inheritance. It records only bounded response metadata and a SHA-256 digest, never the response body or bearer token. See [`docs/architecture/phase-11-http-webhook.md`](docs/architecture/phase-11-http-webhook.md) for the request contract and Windows testing instructions.
+
 ## Phase 10 production deployment
 
 Phase 10 provides non-root, read-only application containers and a production Compose stack. PostgreSQL and Redis are isolated on internal networks. Caddy is the only public service and obtains HTTPS certificates automatically. API documentation and local AI are disabled by default in production, metrics remain private, and unsafe production secrets or wildcard host configuration stop the API during startup.
@@ -241,7 +255,7 @@ scripts/                 Repository automation
 
 ## Current scope
 
-Phases 1 through 10 are complete. A server and domain are required to activate the prepared online deployment. Production tool integrations remain a future phase.
+Phases 1 through 11 are complete. A server and domain are required to activate the prepared online deployment. Additional service-specific connectors and framework adapters remain future phases.
 
 ## Security posture
 

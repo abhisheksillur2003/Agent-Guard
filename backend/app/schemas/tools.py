@@ -54,3 +54,11 @@ class ToolResponse(ORMModel):
     execution_timeout_seconds: int
     created_at: datetime
     updated_at: datetime
+
+
+class ToolAdapterResponse(BaseModel):
+    name: str
+    version: str
+    retry_safe: bool
+    required_capabilities: list[ToolCapability]
+    configured: bool

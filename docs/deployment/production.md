@@ -98,3 +98,9 @@ Application rollback uses the previous immutable API and frontend image tags. Da
 The production template disables local AI. Enable it only when Ollama is hosted on a private authenticated network and its resource use, privacy boundary, availability, and patching are managed explicitly. Its output remains advisory.
 
 The local Grafana stack is not exposed by this deployment. Send OTLP traces to a private collector by setting `AGENTGUARD_OTEL_TRACES_ENDPOINT`, and configure an internal Prometheus scraper for `http://api:8000/metrics`. Do not route `/metrics` through the public gateway.
+
+## Outbound webhook connector
+
+The production template disables outbound webhooks. To enable `http_webhook@1`, add an exact HTTPS URL to `AGENTGUARD_HTTP_WEBHOOK_ALLOWED_URLS`, set `AGENTGUARD_HTTP_WEBHOOK_ENABLED=true`, and optionally add a bearer token keyed by the same URL in `AGENTGUARD_HTTP_WEBHOOK_BEARER_TOKENS`. Keep tokens only in the protected environment file. The API refuses production HTTP URLs, placeholder tokens, URL credentials, query-string secrets, and token entries that do not match the allowlist.
+
+Keep `AGENTGUARD_HTTP_WEBHOOK_ALLOW_PRIVATE_NETWORKS=false` for internet-facing receivers. Enable it only for a reviewed internal destination reachable through the container network, then verify firewall and DNS behavior independently. See [`../architecture/phase-11-http-webhook.md`](../architecture/phase-11-http-webhook.md) for the execution contract and failure codes.
