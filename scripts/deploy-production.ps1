@@ -16,6 +16,17 @@ if (-not (Test-Path -LiteralPath $resolvedEnvironmentFile)) {
     throw "Production environment file not found: $resolvedEnvironmentFile"
 }
 
+$environmentContent = Get-Content -Raw -LiteralPath $resolvedEnvironmentFile
+if ($environmentContent -match 'replace-with|agentguard\.example\.com|sha-replace') {
+    throw "$resolvedEnvironmentFile still contains deployment placeholders."
+}
+if (
+    $environmentContent -notmatch '(?m)^AGENTGUARD_API_IMAGE=ghcr\.io/abhisheksillur2003/agentguard-api:sha-[0-9a-f]{7,40}$' -or
+    $environmentContent -notmatch '(?m)^AGENTGUARD_FRONTEND_IMAGE=ghcr\.io/abhisheksillur2003/agentguard-frontend:sha-[0-9a-f]{7,40}$'
+) {
+    throw "$resolvedEnvironmentFile must pin both application images to immutable commit tags."
+}
+
 function Invoke-DockerCompose {
     param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Arguments)
 
@@ -36,7 +47,7 @@ try {
         Invoke-DockerCompose pull api frontend
     }
     Invoke-DockerCompose --profile tools run --rm migrate
-    Invoke-DockerCompose up -d --remove-orphans
+    Invoke-DockerCompose up -d --remove-orphans --wait --wait-timeout 180
     Invoke-DockerCompose ps
 } finally {
     $env:AGENTGUARD_ENV_FILE = $previousAgentGuardEnvFile

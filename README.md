@@ -1,6 +1,6 @@
 # AgentGuard
 
-AgentGuard is a local-first security, reliability, and observability control plane for tool-using AI agents. Phase 1 provides the typed FastAPI and PostgreSQL foundation. Phase 2 adds tenant-scoped identities, registries, permissions, and audit records. Phase 3 adds immutable policy versions and a durable, deny-by-default decision gateway. Phase 4 adds human approvals and controlled, idempotent tool execution. Phase 5 adds deterministic secret, PII, and prompt-injection protection. Phase 6 adds rate limits, execution budgets, loop detection, bounded retries, and background reconciliation. Phase 7 adds the authenticated Next.js operations console. Phase 8 adds privacy-safe metrics, traces, and local monitoring dashboards. Phase 9 adds optional, advisory local-model classification through Ollama. Phase 10 adds hardened production containers and an HTTPS deployment stack. Phase 11 adds a guarded outbound webhook connector for real tool integrations. Phase 12 adds a typed Python SDK and guarded Ollama agent example. Phase 13 adds native LangChain and CrewAI tool integrations.
+AgentGuard is a local-first security, reliability, and observability control plane for tool-using AI agents. Phase 1 provides the typed FastAPI and PostgreSQL foundation. Phase 2 adds tenant-scoped identities, registries, permissions, and audit records. Phase 3 adds immutable policy versions and a durable, deny-by-default decision gateway. Phase 4 adds human approvals and controlled, idempotent tool execution. Phase 5 adds deterministic secret, PII, and prompt-injection protection. Phase 6 adds rate limits, execution budgets, loop detection, bounded retries, and background reconciliation. Phase 7 adds the authenticated Next.js operations console. Phase 8 adds privacy-safe metrics, traces, and local monitoring dashboards. Phase 9 adds optional, advisory local-model classification through Ollama. Phase 10 adds hardened production containers and an HTTPS deployment stack. Phase 11 adds a guarded outbound webhook connector for real tool integrations. Phase 12 adds a typed Python SDK and guarded Ollama agent example. Phase 13 adds native LangChain and CrewAI tool integrations. Phase 14 adds multi-architecture images and a Linux deployment path for an Oracle Cloud Always Free VM with a DuckDNS hostname.
 
 ## Prerequisites
 
@@ -246,6 +246,25 @@ uv run python -m examples.crewai_guarded_agent "Refund order ORD-123 for amount 
 
 The wrappers contain no local tool callback, so framework errors cannot bypass the AgentGuard execution boundary. See [`docs/architecture/phase-13-framework-integrations.md`](docs/architecture/phase-13-framework-integrations.md) for integration examples, approval continuation, and failure behavior.
 
+## Phase 14 Oracle Always Free deployment
+
+Phase 14 publishes both `linux/amd64` and `linux/arm64` production images, so the complete stack can run on an Oracle Ampere A1 VM. Linux scripts generate protected secrets, install Docker, maintain a DuckDNS record, deploy immutable image tags, apply forward-only migrations, wait for service health, and verify the public HTTPS boundary.
+
+After creating the Ubuntu VM and DuckDNS subdomain, follow [`docs/deployment/oracle-always-free.md`](docs/deployment/oracle-always-free.md). The short server-side flow is:
+
+```bash
+sudo ./scripts/bootstrap-ubuntu.sh
+# Reconnect the SSH session before continuing.
+sudo ./scripts/install-duckdns-updater.sh --subdomain your-agentguard
+./scripts/prepare-production-env.sh \
+  --domain your-agentguard.duckdns.org \
+  --email you@example.com \
+  --image-tag "sha-$(git rev-parse --short=7 HEAD)"
+./scripts/deploy-production.sh --skip-build
+```
+
+The Oracle and DuckDNS account steps remain interactive because their identity, card-verification, SSH-key, and DNS-token values must stay with the operator.
+
 ## Verification
 
 ```powershell
@@ -291,7 +310,7 @@ scripts/                 Repository automation
 
 ## Current scope
 
-Phases 1 through 13 are complete. A server and domain are required to activate the prepared online deployment. Service-specific connectors and release operations remain future phases.
+Phases 1 through 14 are complete. The repository is prepared for an Oracle Always Free ARM VM and free DuckDNS hostname. Creating the external accounts and VM remains an operator action because it requires private identity, billing-verification, SSH, and DNS credentials.
 
 ## Security posture
 

@@ -2,18 +2,28 @@
 
 ## Prerequisites
 
-Use a Linux server with a public IPv4 address, Docker Engine with the Compose plugin, at least 2 CPU cores, 4 GB RAM, and persistent disk. Point the domain's `A` record to the server. Add an `AAAA` record only when IPv6 is configured on the server. Allow inbound TCP 22 from trusted administration addresses, TCP 80 and 443 publicly, and UDP 443 publicly. Do not expose PostgreSQL, Redis, FastAPI, or metrics ports.
+Use a Linux AMD64 or ARM64 server with a public IPv4 address, Docker Engine with the Compose plugin, at least 2 CPU cores, 4 GB RAM, and persistent disk. Point the domain's `A` record to the server. Add an `AAAA` record only when IPv6 is configured on the server. Allow inbound TCP 22 from trusted administration addresses, TCP 80 and 443 publicly, and UDP 443 publicly. Do not expose PostgreSQL, Redis, FastAPI, or metrics ports.
 
 Clone a verified revision of the repository on the server. The examples below assume the repository root as the current directory.
 
 ## Secrets and configuration
 
-Generate `.env.production` without printing its secrets:
+Generate `.env.production` without printing its secrets. Use the immutable image tag produced from a successful CI run:
+
+```bash
+./scripts/prepare-production-env.sh \
+  --domain agentguard.example.com \
+  --email admin@example.com \
+  --image-tag "sha-$(git rev-parse --short=7 HEAD)"
+```
+
+The Linux generator creates the file with mode `600`. The equivalent Windows command is:
 
 ```powershell
 ./scripts/prepare-production-env.ps1 `
   -Domain agentguard.example.com `
-  -AcmeEmail admin@example.com
+  -AcmeEmail admin@example.com `
+  -ImageTag "sha-$(git rev-parse --short=7 HEAD)"
 ```
 
 On Linux, restrict the file before deployment:
@@ -26,26 +36,32 @@ Keep the file in an encrypted backup separate from the database backup. Losing t
 
 ## First deployment
 
-Build from the checked-out source, validate configuration, apply migrations, and start the stack:
+On Linux, pull the verified multi-architecture images, validate configuration, apply migrations, start the stack, and wait for health checks:
+
+```bash
+./scripts/deploy-production.sh --skip-build
+```
+
+To build from the checked-out source instead, omit `--skip-build`. The equivalent Windows command is:
 
 ```powershell
-./scripts/deploy-production.ps1
+./scripts/deploy-production.ps1 -SkipBuild
 ```
 
 The script stops on invalid Compose configuration, failed image builds, or failed migrations. It never downgrades the database. Inspect status and logs with:
 
-```powershell
+```bash
 docker compose --env-file .env.production -f docker-compose.production.yml ps
 docker compose --env-file .env.production -f docker-compose.production.yml logs --tail 200 api frontend caddy worker scheduler
 ```
 
 Create the first administrator interactively:
 
-```powershell
-docker compose --env-file .env.production -f docker-compose.production.yml exec api `
-  agentguard-admin create-admin `
-  --organization "AgentGuard Production" `
-  --slug agentguard-production `
+```bash
+docker compose --env-file .env.production -f docker-compose.production.yml exec api \
+  agentguard-admin create-admin \
+  --organization "AgentGuard Production" \
+  --slug agentguard-production \
   --email admin@example.com
 ```
 
@@ -63,17 +79,23 @@ Confirm all of the following from a computer outside the server:
 
 Run a TLS configuration scan after DNS and certificate issuance. Keep server time synchronized because authentication tokens and approval expiry depend on accurate UTC time.
 
+The repository verification script checks HTTPS, production health, readiness, security headers, and the absence of public documentation and metrics routes:
+
+```bash
+./scripts/verify-production.sh agentguard.example.com
+```
+
 ## Published container images
 
-After CI succeeds on `main`, GitHub Actions publishes:
+After CI succeeds on `main`, GitHub Actions publishes manifest lists supporting `linux/amd64` and `linux/arm64`:
 
 - `ghcr.io/abhisheksillur2003/agentguard-api:sha-<commit>`
 - `ghcr.io/abhisheksillur2003/agentguard-frontend:sha-<commit>`
 
 Set `AGENTGUARD_API_IMAGE` and `AGENTGUARD_FRONTEND_IMAGE` in `.env.production` to immutable SHA tags. Authenticate the server to GHCR if the packages are private, then deploy without rebuilding:
 
-```powershell
-./scripts/deploy-production.ps1 -SkipBuild
+```bash
+./scripts/deploy-production.sh --skip-build
 ```
 
 ## Backups

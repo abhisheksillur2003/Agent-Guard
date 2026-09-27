@@ -7,6 +7,10 @@ param(
     [ValidatePattern('^[^@\s]+@[^@\s]+\.[^@\s]+$')]
     [string]$AcmeEmail,
 
+    [Parameter(Mandatory = $true)]
+    [ValidatePattern('^sha-[0-9a-f]{7,40}$')]
+    [string]$ImageTag,
+
     [string]$OutputPath = '.env.production',
 
     [switch]$Force
@@ -40,6 +44,8 @@ $content = Get-Content -Raw -LiteralPath $templatePath
 $replacements = [ordered]@{
     'DOMAIN' = $Domain
     'ACME_EMAIL' = $AcmeEmail
+    'AGENTGUARD_API_IMAGE' = "ghcr.io/abhisheksillur2003/agentguard-api:${ImageTag}"
+    'AGENTGUARD_FRONTEND_IMAGE' = "ghcr.io/abhisheksillur2003/agentguard-frontend:${ImageTag}"
     'POSTGRES_PASSWORD' = $postgresPassword
     'REDIS_PASSWORD' = $redisPassword
     'AGENTGUARD_ALLOWED_HOSTS' = "[`"$Domain`",`"api`"]"

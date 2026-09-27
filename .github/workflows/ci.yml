@@ -111,14 +111,32 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Validate production Compose configuration
-        env:
-          AGENTGUARD_ENV_FILE: .env.production.example
-        run: >-
-          docker compose
-          --env-file .env.production.example
-          -f docker-compose.production.yml
-          config --quiet
+      - name: Validate Linux deployment scripts and generated configuration
+        run: |
+          bash -n scripts/*.sh
+          generated_directory="$(mktemp -d)"
+          trap 'rm -rf "$generated_directory"' EXIT
+          generated_environment="$generated_directory/.env.production"
+          ./scripts/prepare-production-env.sh \
+            --domain agentguard-ci.example.com \
+            --email ci@example.com \
+            --image-tag sha-abcdef0 \
+            --output "$generated_environment"
+          test "$(stat -c '%a' "$generated_environment")" = "600"
+          if grep -Eq 'replace-with|agentguard\.example\.com|sha-replace' "$generated_environment"; then
+            echo "Generated environment contains placeholders" >&2
+            exit 1
+          fi
+          test "$(grep -E '^(POSTGRES_PASSWORD|REDIS_PASSWORD|AGENTGUARD_AUTH_SIGNING_KEY|AGENTGUARD_AGENT_KEY_PEPPER|AGENTGUARD_FINDING_FINGERPRINT_PEPPER)=' "$generated_environment" | cut -d= -f2- | sort -u | wc -l)" = "5"
+          AGENTGUARD_ENV_FILE="$generated_environment" docker compose \
+            --env-file "$generated_environment" \
+            -f docker-compose.production.yml \
+            config --quiet
+
+      - name: Set up ARM64 emulation
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
+        with:
+          platforms: arm64
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
@@ -128,6 +146,7 @@ jobs:
         with:
           context: .
           file: ${{ matrix.dockerfile }}
+          platforms: linux/amd64,linux/arm64
           push: false
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}
