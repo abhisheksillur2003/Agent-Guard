@@ -1,6 +1,6 @@
 # AgentGuard
 
-AgentGuard is a local-first security, reliability, and observability control plane for tool-using AI agents. Phase 1 provides the typed FastAPI and PostgreSQL foundation. Phase 2 adds tenant-scoped identities, registries, permissions, and audit records. Phase 3 adds immutable policy versions and a durable, deny-by-default decision gateway. Phase 4 adds human approvals and controlled, idempotent tool execution. Phase 5 adds deterministic secret, PII, and prompt-injection protection. Phase 6 adds rate limits, execution budgets, loop detection, bounded retries, and background reconciliation. Phase 7 adds the authenticated Next.js operations console. Phase 8 adds privacy-safe metrics, traces, and local monitoring dashboards. Phase 9 adds optional, advisory local-model classification through Ollama. Phase 10 adds hardened production containers and an HTTPS deployment stack. Phase 11 adds a guarded outbound webhook connector for real tool integrations. Phase 12 adds a typed Python SDK and guarded Ollama agent example. Phase 13 adds native LangChain and CrewAI tool integrations. Phase 14 adds multi-architecture images and a Linux deployment path for an Oracle Cloud Always Free VM with a DuckDNS hostname.
+AgentGuard is a local-first security, reliability, and observability control plane for tool-using AI agents. Phase 1 provides the typed FastAPI and PostgreSQL foundation. Phase 2 adds tenant-scoped identities, registries, permissions, and audit records. Phase 3 adds immutable policy versions and a durable, deny-by-default decision gateway. Phase 4 adds human approvals and controlled, idempotent tool execution. Phase 5 adds deterministic secret, PII, and prompt-injection protection. Phase 6 adds rate limits, execution budgets, loop detection, bounded retries, and background reconciliation. Phase 7 adds the authenticated Next.js operations console. Phase 8 adds privacy-safe metrics, traces, and local monitoring dashboards. Phase 9 adds optional, advisory local-model classification through Ollama. Phase 10 adds hardened production containers and an HTTPS deployment stack. Phase 11 adds a guarded outbound webhook connector for real tool integrations. Phase 12 adds a typed Python SDK and guarded Ollama agent example. Phase 13 adds native LangChain and CrewAI tool integrations. Phase 14 adds multi-architecture deployment images. Phase 15 adds an idempotent local demo workspace for exercising the complete guarded flow without cloud infrastructure.
 
 ## Prerequisites
 
@@ -20,12 +20,15 @@ uv sync --all-groups
 docker compose up -d postgres redis
 uv run alembic upgrade head
 uv run agentguard-admin create-admin --organization "AgentGuard Local" --slug agentguard-local --email admin@example.com
+uv run agentguard-admin seed-local-demo --admin-email admin@example.com --skip-credential
 uv run uvicorn backend.app.main:app --reload
 pnpm --dir frontend install --frozen-lockfile
 pnpm --dir frontend dev
 ```
 
 The administrator command prompts for a password without echoing it. Use at least 12 characters. Set independent random values for `AGENTGUARD_AUTH_SIGNING_KEY` and `AGENTGUARD_AGENT_KEY_PEPPER` before using the service outside disposable local development.
+
+The optional demo command populates Agents, Tools, Policies, and Security with synthetic local records. It is safe to rerun and refuses non-local environments. Omit `--skip-credential` if you need a one-time agent credential for the SDK examples.
 
 The API will be available at `http://127.0.0.1:8000`. The frontend will be available at `http://127.0.0.1:3000`.
 
@@ -265,6 +268,19 @@ sudo ./scripts/install-duckdns-updater.sh --subdomain your-agentguard
 
 The Oracle and DuckDNS account steps remain interactive because their identity, card-verification, SSH-key, and DNS-token values must stay with the operator.
 
+## Phase 15 local demo workspace
+
+Cloud infrastructure is optional. With PostgreSQL running, populate a safe local workspace for the existing administrator:
+
+```powershell
+uv run alembic upgrade head
+uv run agentguard-admin seed-local-demo `
+  --admin-email admin@example.com `
+  --skip-credential
+```
+
+The command creates a local-only support agent, a side-effect-free refund simulator, an explicit permission, a large-refund approval policy, and deterministic secret, PII, and prompt-manipulation detectors. Existing matching resources are reused; conflicting resources are never overwritten. Remove `--skip-credential` when you need a credential for the Python SDK or framework examples. The credential is shown once and stored only as a keyed hash. See [`docs/architecture/phase-15-local-demo-workspace.md`](docs/architecture/phase-15-local-demo-workspace.md).
+
 ## Verification
 
 ```powershell
@@ -310,7 +326,7 @@ scripts/                 Repository automation
 
 ## Current scope
 
-Phases 1 through 14 are complete. The repository is prepared for an Oracle Always Free ARM VM and free DuckDNS hostname. Creating the external accounts and VM remains an operator action because it requires private identity, billing-verification, SSH, and DNS credentials.
+Phases 1 through 15 are complete. AgentGuard can be developed and demonstrated entirely on a local Windows system. Cloud deployment remains optional.
 
 ## Security posture
 

@@ -1,4 +1,5 @@
 .next/
 coverage/
+next-env.d.ts
 node_modules/
 *.tsbuildinfo
