@@ -77,7 +77,7 @@ class AgentGuardClient:
             headers={
                 "Authorization": f"Bearer {self._agent_token.get_secret_value()}",
                 "Accept": "application/json",
-                "User-Agent": "AgentGuard-Python-SDK/0.15.0",
+                "User-Agent": "AgentGuard-Python-SDK/0.16.0",
             },
             timeout=httpx.Timeout(timeout_seconds),
             follow_redirects=False,

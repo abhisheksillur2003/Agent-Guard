@@ -1,6 +1,6 @@
 # AgentGuard
 
-AgentGuard is a local-first security, reliability, and observability control plane for tool-using AI agents. Phase 1 provides the typed FastAPI and PostgreSQL foundation. Phase 2 adds tenant-scoped identities, registries, permissions, and audit records. Phase 3 adds immutable policy versions and a durable, deny-by-default decision gateway. Phase 4 adds human approvals and controlled, idempotent tool execution. Phase 5 adds deterministic secret, PII, and prompt-injection protection. Phase 6 adds rate limits, execution budgets, loop detection, bounded retries, and background reconciliation. Phase 7 adds the authenticated Next.js operations console. Phase 8 adds privacy-safe metrics, traces, and local monitoring dashboards. Phase 9 adds optional, advisory local-model classification through Ollama. Phase 10 adds hardened production containers and an HTTPS deployment stack. Phase 11 adds a guarded outbound webhook connector for real tool integrations. Phase 12 adds a typed Python SDK and guarded Ollama agent example. Phase 13 adds native LangChain and CrewAI tool integrations. Phase 14 adds multi-architecture deployment images. Phase 15 adds an idempotent local demo workspace for exercising the complete guarded flow without cloud infrastructure.
+AgentGuard is a local-first security, reliability, and observability control plane for tool-using AI agents. Phase 1 provides the typed FastAPI and PostgreSQL foundation. Phase 2 adds tenant-scoped identities, registries, permissions, and audit records. Phase 3 adds immutable policy versions and a durable, deny-by-default decision gateway. Phase 4 adds human approvals and controlled, idempotent tool execution. Phase 5 adds deterministic secret, PII, and prompt-injection protection. Phase 6 adds rate limits, execution budgets, loop detection, bounded retries, and background reconciliation. Phase 7 adds the authenticated Next.js operations console. Phase 8 adds privacy-safe metrics, traces, and local monitoring dashboards. Phase 9 adds optional, advisory local-model classification through Ollama. Phase 10 adds hardened production containers and an HTTPS deployment stack. Phase 11 adds a guarded outbound webhook connector for real tool integrations. Phase 12 adds a typed Python SDK and guarded Ollama agent example. Phase 13 adds native LangChain and CrewAI tool integrations. Phase 14 adds multi-architecture deployment images. Phase 15 adds an idempotent local demo workspace for exercising the complete guarded flow without cloud infrastructure. Phase 16 adds one-command Windows startup, status, verification, shutdown, backup, and rollback-safe restore operations.
 
 ## Prerequisites
 
@@ -13,6 +13,22 @@ AgentGuard is a local-first security, reliability, and observability control pla
 - Ollama with `llama3.2:3b` for optional local AI review
 
 ## Local setup
+
+After creating `.env` and installing the prerequisites, the Windows launcher starts the full product:
+
+```powershell
+.\scripts\start-local.ps1
+```
+
+Open `http://127.0.0.1:3000/login`. Check or stop the workstation with:
+
+```powershell
+.\scripts\status-local.ps1
+.\scripts\verify-local.ps1
+.\scripts\stop-local.ps1
+```
+
+The individual setup commands remain available when developing one component:
 
 ```powershell
 Copy-Item .env.example .env
@@ -281,6 +297,25 @@ uv run agentguard-admin seed-local-demo `
 
 The command creates a local-only support agent, a side-effect-free refund simulator, an explicit permission, a large-refund approval policy, and deterministic secret, PII, and prompt-manipulation detectors. Existing matching resources are reused; conflicting resources are never overwritten. Remove `--skip-credential` when you need a credential for the Python SDK or framework examples. The credential is shown once and stored only as a keyed hash. See [`docs/architecture/phase-15-local-demo-workspace.md`](docs/architecture/phase-15-local-demo-workspace.md).
 
+## Phase 16 Windows local operations
+
+Phase 16 turns the multi-process development stack into a repeatable Windows workstation workflow. The launcher can start Docker Desktop, PostgreSQL, Redis, migrations, FastAPI, Celery worker and scheduler, Next.js, and optional Ollama. It records only the processes it starts, so shutdown does not terminate unrelated programs.
+
+Create a validated PostgreSQL backup before important local changes:
+
+```powershell
+.\scripts\backup-local.ps1
+```
+
+Restore a reviewed archive with an explicit destructive flag:
+
+```powershell
+.\scripts\restore-local.ps1 -BackupPath .\backups\agentguard-YYYYMMDD-HHMMSS.dump -Force
+.\scripts\start-local.ps1
+```
+
+The restore workflow checks the archive and its SHA-256 companion, restores into a staging database, swaps databases only after validation, applies forward migrations, and puts the previous database back if migration fails. Local operations refuse non-local environments. See [`docs/architecture/phase-16-windows-local-operations.md`](docs/architecture/phase-16-windows-local-operations.md).
+
 ## Verification
 
 ```powershell
@@ -326,7 +361,7 @@ scripts/                 Repository automation
 
 ## Current scope
 
-Phases 1 through 15 are complete. AgentGuard can be developed and demonstrated entirely on a local Windows system. Cloud deployment remains optional.
+Phases 1 through 16 are complete. AgentGuard can be developed, operated, backed up, restored, and demonstrated entirely on a local Windows system. Cloud deployment remains optional.
 
 ## Security posture
 

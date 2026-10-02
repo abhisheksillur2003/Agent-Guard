@@ -96,6 +96,59 @@ jobs:
       - name: Build
         run: pnpm --dir frontend build
 
+  windows-operations:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Validate PowerShell operations
+        shell: pwsh
+        run: |
+          $parseFailures = @()
+          Get-ChildItem -LiteralPath scripts -Filter *.ps1 | ForEach-Object {
+            $tokens = $null
+            $parseErrors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile(
+              $_.FullName,
+              [ref]$tokens,
+              [ref]$parseErrors
+            )
+            $parseFailures += $parseErrors
+          }
+          if ($parseFailures.Count -gt 0) {
+            $parseFailures | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
+
+          . .\scripts\local-common.ps1
+          $env:AGENTGUARD_PHASE16_TEST = "process-override"
+          if ((Get-AgentGuardEnvValue -Name "AGENTGUARD_PHASE16_TEST") -ne "process-override") {
+            throw "Process environment override lookup failed."
+          }
+
+          $entry = New-AgentGuardProcessEntry -Component "ci" -Process (Get-Process -Id $PID)
+          Save-AgentGuardProcesses -Processes @($entry)
+          $saved = @(Get-AgentGuardProcesses)
+          if ($saved.Count -ne 1 -or -not (Test-AgentGuardRegisteredProcess -Entry $saved[0])) {
+            throw "Managed process registry round trip failed."
+          }
+          Save-AgentGuardProcesses -Processes @()
+          if (@(Get-AgentGuardProcesses).Count -ne 0) {
+            throw "Managed process registry did not clear."
+          }
+
+          try {
+            Assert-AgentGuardDatabaseName -Name 'agentguard"; DROP DATABASE postgres; --'
+            throw "Unsafe database name was accepted."
+          }
+          catch {
+            if ($_.Exception.Message -eq "Unsafe database name was accepted.") {
+              throw
+            }
+          }
+
   deployment:
     runs-on: ubuntu-latest
     strategy:

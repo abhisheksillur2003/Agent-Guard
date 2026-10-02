@@ -14,6 +14,8 @@ __pycache__/
 htmlcov/
 dist/
 build/
+backups/
+celerybeat-schedule*
 *.egg-info/
 .idea/
 .vscode/
